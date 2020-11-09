@@ -1,108 +1,94 @@
 #define  _CRT_SECURE_NO_WARNINGS 
 #include <stdio.h>
-#include <locale.h>
 #include<string.h>
 #include<malloc.h>
-#include <stdbool.h>
-#define SIZE_OF_BLOCK 100
+#define SIZE_OF_BLOCK 150
+
 typedef   unsigned long long big_int;
-big_int init_hash(char* str,int len , big_int* arr_pow_3) {
-    big_int result = 0;
+big_int  arr_pow_3[SIZE_OF_BLOCK];
 
-    for (int i = 0; i < len; i++) {
-        result = result + ((str[i] % 3) * (arr_pow_3[i]));
-    }
-    return result;
+big_int init_hash(char* str, int begin, int len_temp) {
+	big_int result = 0;
+
+	for (int i = 0; i < len_temp; i++) {
+		result = result + (((unsigned char)str[begin + i] % 3) * (arr_pow_3[begin + i]));
+	}
+	return result;
 }
-
-big_int new_hash(big_int hash, int len, char first_c, char last_c, big_int* arr_pow_3) {
-    hash -= (first_c % 3);
-    hash /= 3;
-     
-    hash += ((last_c % 3) * (arr_pow_3[len-1]));
-    return hash;
+int recount_hash(big_int* hash, int  length_temp, char first_c, char last_c) {
+	*hash -= ((unsigned char)first_c % 3);
+	*hash /= 3;
+	*hash += (((unsigned char)last_c % 3) * (arr_pow_3[length_temp - 1]));
+	return 0;
 }
-bool is_matching(char* str, char* template,int len) {
-    if (str == NULL || template == NULL || strlen(str)== strlen(template)) return false;
-    for (int i = 0; i < len ; i++) {
-        if (str[i] != template[i])
-            return false;
-
-    }
-    return true;
+int init_array_pow_3(int n) {
+	big_int result = 1;
+	//  big_int * arr = (big_int*)malloc((n+1) * sizeof(big_int));
+	for (int i = 0; i < n + 1; i++) {
+		arr_pow_3[i] = result;
+		result *= 3;
+	}
+	return 0;
 }
-
-big_int * init_array_pow_3(int n) {
-    big_int result = 1;
-    big_int * arr = (big_int*)malloc(n * sizeof(big_int));
-    for (int i = 0; i < n+1; i++) {
-        arr[i] = result;
-        result *= 3;
-    }
-    return arr;
+int re_init_array(char* line, int len, int number) {
+	for (int i = 0; i < len - number; i++) 
+		line[i] = line[number + i];
+	return 0;
 }
-char * str_cut(char* str, int begin, int len)
-{
-    int l = strlen(str);
-    char* res = (char*)malloc(sizeof(char) * len);
-    for (int i = 0; i < len;i++) {
-        res[i] = str[i + begin];
-    }
+int robin_karp(FILE* file, char* temp) {
+	big_int hash_s, hash_t;
 
-    return res;
-}
-char * re_init_array(char* line,int number) {
-   
-    for (int i = 0; i < strlen(line)-number; i++) {
-        line[i] = line[number + i];
-    }
+	char line[SIZE_OF_BLOCK] = { 0 };
 
+	size_t len_temp = strlen(temp) - 1;
+	size_t start_write_with = 0;
+	size_t number = 0;
+
+	char past_firs_char;
+	init_array_pow_3(len_temp);
+	hash_t = init_hash(temp, 0, len_temp);
+	
+	printf("%llu ", hash_t);
+	
+	while (!feof(file)) {
+		size_t len_read = fread(&line[start_write_with], sizeof(char), SIZE_OF_BLOCK - start_write_with, file);
+		if (len_read + start_write_with < len_temp)
+			break;
+
+		if (start_write_with != 0) 
+			recount_hash(&hash_s, len_temp, past_firs_char, line[len_temp - 1]);
+		else  
+			hash_s = init_hash(line, 0, len_temp);
+		 
+		for (size_t i = 0; i <= len_read + start_write_with - len_temp; i++) {
+			if (i != 0)
+				recount_hash(&hash_s, len_temp, line[i - 1], line[i + len_temp - 1]);
+			if (hash_s == hash_t) {
+				for (size_t j = 0; j < len_temp; j++) {
+					int res = i + number + 1 + j;
+					printf("%d ", res);
+					if (line[i + j] != temp[j])
+						break;
+				}
+			}
+		}
+		if (feof(file))
+			break;
+		past_firs_char = line[SIZE_OF_BLOCK - len_temp - 1];
+		re_init_array(line, SIZE_OF_BLOCK, SIZE_OF_BLOCK - len_temp + 1);
+
+		start_write_with = len_temp - 1;
+		number += (SIZE_OF_BLOCK - len_temp + 1);
+	}
+	return 0;
 }
 int main()
-{
-    setlocale(LC_ALL, "Russian");
-    
-    big_int hash_s,hash_t;
-    
-    char line[SIZE_OF_BLOCK] = { 0 };
-    char temp[SIZE_OF_BLOCK] = { 0 };
-  
- 
-    FILE* file = fopen("file.txt", "r");
-    
-    fgets(temp, SIZE_OF_BLOCK, file);
-    int len_temp = strlen(temp)-1;
-    int here_ = 0;
-    int num = 0;
-    big_int arr_pow_3 = init_array_pow_3(len_temp);
-    hash_t = init_hash(temp, len_temp, arr_pow_3);
-    bool flag = true;
-    while ( flag) {
-        if (feof(file))
-            flag = false;
-        size_t f = fread(&line[here_], sizeof(char), SIZE_OF_BLOCK-here_, file);
-
-        char* buffer = str_cut(line, 0, len_temp);
-
-       
-
-        hash_s = init_hash(buffer,len_temp, arr_pow_3);
-  
-
-        for (int i = 0; i <= f  +here_ - len_temp; i++) {
-            if (hash_s == hash_t) {
-                if (is_matching(str_cut(line, i, len_temp), temp, len_temp)) {
-                    printf("yes %d", num + i);
-                }
-
-                
-            }
-            hash_s = new_hash(hash_s, len_temp, line[i], line[i + len_temp], arr_pow_3);
-        }
-        re_init_array(line, f - len_temp);
-        here_ = len_temp;
-        num += f - len_temp;
-    }
-    fclose(file);
-    return 0;
+{	char temp[SIZE_OF_BLOCK] = { 0 };
+	//FILE* file = fopen("C:\\Users\\anas2\\source\\repos\\robinKarp\\Debug\\in.txt", "r");
+	FILE* file = stdin;
+	if (!fgets(temp, SIZE_OF_BLOCK, file))
+		return 1;
+	robin_karp(file, temp);
+	fclose(file);
+	return 0;
 }

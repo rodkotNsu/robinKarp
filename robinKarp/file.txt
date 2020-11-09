@@ -1,2 +1,2 @@
 example
-sthis is simple example
+this is simple example
