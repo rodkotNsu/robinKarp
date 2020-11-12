@@ -47,7 +47,7 @@ void robin_karp(FILE* file, char* temp) {
 	printf("%llu ", hash_t);
 
 	while (!feof(file)) {
-		//последовательное считывание строки начиная с последнего элемента,который храниться в буфере
+		//РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕРµ СЃС‡РёС‚С‹РІР°РЅРёРµ СЃС‚СЂРѕРєРё РЅР°С‡РёРЅР°СЏ СЃ РїРѕСЃР»РµРґРЅРµРіРѕ СЌР»РµРјРµРЅС‚Р°,РєРѕС‚РѕСЂС‹Р№ С…СЂР°РЅРёС‚СЊСЃСЏ РІ Р±СѓС„РµСЂРµ
 		size_t len_read = fread(&line[start_write_with], sizeof(char), SIZE_OF_BLOCK - start_write_with, file);
 		if (len_read + start_write_with < len_temp)
 			break;
@@ -81,7 +81,7 @@ void robin_karp(FILE* file, char* temp) {
 int main()
 {
 	char temp[SIZE_OF_BLOCK] = { 0 };
-	 //считаывание шаблона
+	 //СЃС‡РёС‚Р°С‹РІР°РЅРёРµ С€Р°Р±Р»РѕРЅР°
 	if (!fgets(temp, SIZE_OF_BLOCK, stdin))
 		return 1;
 	robin_karp(stdin, temp);
